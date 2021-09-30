@@ -5,7 +5,7 @@ const postgresName: string = process.env.POSTGRES_NAME || 'profiles';
 const postgresUser: string = process.env.POSTGRES_USER || 'postgres';
 const postgresPassword: string = process.env.POSTGRES_PASSWORD || 'postgres';
 
-const sequelize = new Sequelize(postgresName, postgresUser, postgresPassword, {
+const sequelize: Sequelize = new Sequelize(postgresName, postgresUser, postgresPassword, {
   host: process.env.POSTGRES_HOST || 'localhost',
   dialect: 'postgres',
 

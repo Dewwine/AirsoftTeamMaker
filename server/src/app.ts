@@ -4,6 +4,7 @@ require('dotenv').config();
 import express, { Application } from 'express';
 
 // Routes
+import auth from './routes/auth';
 import profiles from './routes/profiles';
 
 // PostgreSQL
@@ -15,6 +16,9 @@ import mongoUrl from './db/mongodb';
 // Middlewares
 import { logger } from "./middlewares/logger";
 import { errorHandler } from './middlewares/errorHandler';
+
+import cookieParser from 'cookie-parser';
+
 
 const app: Application = express();
 
@@ -33,7 +37,12 @@ app.use(logger)
 
 app.use(express.json());
 
+app.use(cookieParser());
+
+app.use('/api/', auth);
+
 app.use('/api/', profiles);
+
 
 
 app.use(errorHandler);

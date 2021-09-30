@@ -1,15 +1,18 @@
 import { Router } from 'express';
 
-import { getProfiles, getProfile, createProfile, updateProfile } from '../controllers/profiles.controller';
+import { getProfiles, getProfile, updateProfile, getMe } from '../controllers/profilesController';
+import { protect, authorize } from '../middlewares/auth';
 
 const router: Router = Router();
 
 router.route('/')
-  .get(getProfiles)
-  .post(createProfile);
+  .get(protect, authorize('player', 'manager', 'admin'), getProfiles)
+
+router.route('/me')
+  .get(protect, authorize('player', 'manager', 'admin'), getMe)
 
 router.route('/:id')
-  .get(getProfile)
-  .put(updateProfile);
+  .get(protect, authorize('player', 'manager', 'admin'), getProfile)
+  .put(protect, authorize('player', 'manager', 'admin'), updateProfile);
 
 export default router;
