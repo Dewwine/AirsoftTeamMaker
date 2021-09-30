@@ -1,22 +1,25 @@
-version: "3.9"  # optional since v1.27.0
+version: "3"
 services:
   postgresdb:
     image: postgres
     container_name: postgres
-    restart: always 
-    ports: 
-      - 5432:5432
+    restart: always
+    env_file: 
+      - .env
     volumes: 
-      - data:/var/lib/postgresql/data
-  server: 
-    build: .
-    depends_on: 
-      - postgresdb
+      - ./pgdata:/var/lib/postgresql/data
+  server:
+    build: 
+      context: .
+    container_name: airsoft
+    environment: 
+      POSTGRES_HOST: postgresdb
     ports: 
       - '3000:3000'
-    volumes: 
-      - ./src:/src
-    container_name: airsoft
-    
-volumes:
-  data:
+    depends_on: 
+      - postgresdb
+    volumes: ['./:/app']
+    # volumes: 
+    #   - .:/app
+    restart: always
+    command: npm run dev
