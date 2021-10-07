@@ -6,6 +6,9 @@ import express, { Application } from 'express';
 // Routes
 import auth from './routes/auth';
 import profiles from './routes/profiles';
+import admin from './routes/admin';
+import manager from './routes/manager';
+import player from './routes/player';
 
 // PostgreSQL
 import sequelize from './db/postgresdb';
@@ -41,7 +44,13 @@ app.use(cors());
 
 app.use('/api/', auth);
 
+app.use('/api/', manager);
+
+app.use('/api/', player);
+
 app.use('/api/', profiles);
+
+app.use('/api/', admin);
 
 app.use(errorHandler);
 
