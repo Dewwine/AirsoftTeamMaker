@@ -8,52 +8,50 @@ import auth from './routes/auth';
 import profiles from './routes/profiles';
 
 // PostgreSQL
-import sequelize from "./db/postgresdb";
+import sequelize from './db/postgresdb';
 // MongoDB
 import mongoose from 'mongoose';
 import mongoUrl from './db/mongodb';
 
 // Middlewares
-import { logger } from "./middlewares/logger";
+import { logger } from './middlewares/logger';
 import { errorHandler } from './middlewares/errorHandler';
 
 import cookieParser from 'cookie-parser';
-
+import cors from 'cors';
 
 const app: Application = express();
 
-sequelize.authenticate()
+sequelize
+  .authenticate()
   .then(() => console.log('Connected to postgres'))
-  .catch(err => console.log(`Error: ${err}`))
-
-
+  .catch((err) => console.log(`Error: ${err}`));
 
 mongoose.connect(mongoUrl, () => {
   console.log('Connected to mongo');
-})
+});
 
-
-app.use(logger)
+app.use(logger);
 
 app.use(express.json());
 
 app.use(cookieParser());
 
+app.use(cors());
+
 app.use('/api/', auth);
 
 app.use('/api/', profiles);
-
-
 
 app.use(errorHandler);
 
 process.on('uncaughtException', (error: Error) => {
   console.log(error.message);
   process.exit(1);
-})
+});
 
-process.on('unhandledRejection', (error: Error) => {  
+process.on('unhandledRejection', (error: Error) => {
   console.log(error.message);
-})
+});
 
 export default app;

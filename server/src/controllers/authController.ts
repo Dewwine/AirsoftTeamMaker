@@ -1,112 +1,109 @@
 import crypto, { BinaryLike } from 'crypto';
 import { Response, Request } from 'express';
-import { getProfileByLogin, getProfileByEmail } from '../services/profileService';
-import { createNewProfile, sendTokenResponse } from '../services/authService';
+import {
+  getProfileByLogin,
+  getProfileByEmail,
+  getProfileByResetToken,
+} from '../services/profileService';
+import {
+  createNewPassword,
+  createNewProfile,
+  sendTokenResponse,
+  createResetPasswordToken,
+  deleteResetPasswordToken,
+  resetCookieResponse,
+} from '../services/authService';
 import { IProfile } from '../models/profileModel';
 import { sendEmail } from '../utils/emailSender';
-import Profiles from '../models/profileModel';
-import hashPassword from '../utils/hashPassword';
-import Sequelize from 'sequelize';
-
-const Op = Sequelize.Op;
 
 const register = async (req: Request, res: Response) => {
   const { body } = req;
 
   const profile: IProfile = await createNewProfile(body);
-  
+  if (profile.role === 'manager' && profile.managerStatus !== 'approved') {
+    res.status(400).json({ message: 'Your application on review' });
+    return;
+  }
+
   sendTokenResponse(profile, 200, res);
 };
-
 
 const login = async (req: Request, res: Response): Promise<void> => {
-  const { login, password } = req.body;
- 
-  if (!login || !password) {
-    res.status(400).json({message: 'No login or password'});
-    return;  
-  }
-  
-  const profile: IProfile | null = await getProfileByLogin(login);
+  const { login: profileLogin, password } = req.body;
 
-  if (!profile) {
-    res.status(401).json({message: 'Invalid login'});
+  if (!profileLogin || !password) {
+    res.status(400).json({ message: 'No login or password' });
     return;
   }
 
-  const isMatch = await profile.matchPassword(password)
+  const profile: IProfile | null = await getProfileByLogin(profileLogin);
+  if (!profile) {
+    res.status(401).json({ message: 'Invalid login' });
+    return;
+  }
 
+  const isMatch = await profile.matchPassword(password);
   if (!isMatch) {
-    res.status(401).json({message: 'Invalid password'});
+    res.status(401).json({ message: 'Invalid password' });
+    return;
+  }
+
+  if (profile.role === 'manager' && profile.managerStatus !== 'approved') {
+    res.status(400).json({ message: 'Your application on review' });
     return;
   }
   
   sendTokenResponse(profile, 200, res);
 };
 
+const logout = async (_req: Request, res: Response): Promise<void> => {
+  resetCookieResponse('You have been logged out', 200, res);
+};
 
 const forgotPassword = async (req: Request, res: Response): Promise<void> => {
   const { email } = req.body;
-  const profile: IProfile | null = await getProfileByEmail(email);
 
+  const profile: IProfile | null = await getProfileByEmail(email);
   if (!profile) {
-    res.status(404).json({message: 'No user with such email'});
+    res.status(404).json({ message: 'No user with such email' });
     return;
   }
 
-  const resetToken = profile.getResetPasswordToken();
-  await profile.save();
-  
-  const resetUrl = `${req.protocol}://${req.get('host')}/api/resetpassword/${resetToken}`;
-  const resetMessage = `Your password reset url is: ${resetUrl}`;
-  
+  const resetToken = await createResetPasswordToken(profile.id);
+
+  const resetMessage = `Your password reset url is: ${resetToken}`;
+
   try {
     await sendEmail({
       email: profile.email,
       subject: 'Password reset token',
       message: resetMessage,
-    })
+    });
   } catch (err) {
-    console.log(err);
-    profile.resetPasswordToken = '';
-    profile.resetPasswordExpire = new Date(0);
+    await deleteResetPasswordToken(profile.id);
 
-    await profile.save();
-    
-    res.status(500).json({message: 'Email could not be sent'});
+    res.status(500).json({ message: 'Email could not be sent' });
     return;
   }
-  
-  res.status(200).json({profile, resetToken});
-};
 
+  res.status(200).json({ message: 'Reset token was sent on your email' });
+};
 
 const resetPassword = async (req: Request, res: Response): Promise<void> => {
   const resetPasswordToken = crypto
     .createHash('sha256')
     .update(req.params.resettoken as BinaryLike)
     .digest('hex');
-    
-  const profile = await Profiles.findOne({
-    where: {
-      resetPasswordToken,
-      resetPasswordExpire: { 
-        [Op.gt]: Date.now() 
-      }
-    }
-  });  
 
+  const profile = await getProfileByResetToken(resetPasswordToken);
   if (!profile) {
-    res.status(400).json({message: 'Invalid token'});
+    res.status(400).json({ message: 'Invalid token' });
     return;
   }
-  
-  profile.password = await hashPassword(req.body.password);
-  profile.resetPasswordToken = '';
-  profile.resetPasswordExpire = new Date(0);
-  await profile.save();
+
+  await createNewPassword(profile.id, req.body.password);
 
   sendTokenResponse(profile, 200, res);
 };
 
-export { register, login, forgotPassword, resetPassword };
+export { register, login, logout, forgotPassword, resetPassword };

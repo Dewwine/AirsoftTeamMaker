@@ -1,13 +1,8 @@
-import nodemailer from "nodemailer";
-import { TransportOptions } from "nodemailer";
+import nodemailer from 'nodemailer';
+import { TransportOptions } from 'nodemailer';
 require('dotenv').config();
 
-
-const sendEmail = async (options: {
-  email: string,
-  subject: string,
-  message: string,
-}) => {
+const sendEmail = async (options: { email: string; subject: string; message: string }) => {
   let transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
@@ -17,15 +12,14 @@ const sendEmail = async (options: {
     },
   } as TransportOptions);
 
-
   let message = {
     from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
-    to: options.email, 
+    to: options.email,
     subject: options.subject,
     text: options.message,
-  }
+  };
 
   await transporter.sendMail(message);
-}
+};
 
-export { sendEmail }
+export { sendEmail };
