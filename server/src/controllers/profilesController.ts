@@ -14,7 +14,7 @@ const getProfiles = async (req: Request, res: Response): Promise<void> => {
   const role = req.path.split('/')[1];
 
   if (!role) {
-    res.status(200).json({ message: 'Role not found' });
+    res.status(404).json({ message: 'Role not found' });
     return;
   }
 

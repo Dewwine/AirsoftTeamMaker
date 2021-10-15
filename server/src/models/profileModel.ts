@@ -13,6 +13,7 @@ interface IProfileRequest {
 }
 
 interface IProfileResponse {
+  id: string;
   login: string;
   role: string;
   avatar: string;
@@ -24,16 +25,13 @@ interface IProfile extends Model {
   email: string;
   login: string;
   role: string;
-  managerStatus: string;
   password: string;
   resetPasswordToken: string;
   resetPasswordExpire: Date;
   avatar: string;
   team: string;
-  teamRequest: string;
-  teamStatus: string;
   kickReason: string;
-  isSuspended: boolean;
+  isActive: boolean;
   suspendReason: string;
   createdAt: Date;
 
@@ -47,16 +45,13 @@ class ProfileModel extends Model implements IProfile {
   public email!: string;
   public login!: string;
   public role!: string;
-  public managerStatus!: string;
   public password!: string;
   public resetPasswordToken!: string;
   public resetPasswordExpire!: Date;
   public avatar!: string;
   public team!: string;
-  public teamRequest!: string;
-  public teamStatus!: string;
   public kickReason!: string;
-  public isSuspended!: boolean;
+  public isActive!: boolean;
   public suspendReason!: string;
 
   public readonly createdAt!: Date;
@@ -80,8 +75,8 @@ class ProfileModel extends Model implements IProfile {
   }
 
   toResponse(): IProfileResponse {
-    const { login, role, avatar, team } = this;
-    return { login, role, avatar, team };
+    const { id, login, role, avatar, team } = this;
+    return { id, login, role, avatar, team };
   }
 }
 
@@ -106,9 +101,6 @@ ProfileModel.init(
       type: DataTypes.STRING,
       defaultValue: 'player',
     },
-    managerStatus: {
-      type: DataTypes.STRING,
-    },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -121,23 +113,18 @@ ProfileModel.init(
     },
     avatar: {
       type: DataTypes.STRING,
-      defaultValue: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png',
+      defaultValue:
+        'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png',
     },
     team: {
-      type: DataTypes.STRING,
-    },
-    teamRequest: {
-      type: DataTypes.STRING,
-    },
-    teamStatus: {
       type: DataTypes.STRING,
     },
     kickReason: {
       type: DataTypes.STRING,
     },
-    isSuspended: {
+    isActive: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: true,
     },
     suspendReason: {
       type: DataTypes.STRING,

@@ -4,6 +4,7 @@ import {
   unbanProfile,
   approveManager,
   declineManager,
+  getManagerRequests,
 } from '../controllers/adminController';
 
 import { getProfiles, getProfile } from '../controllers/profilesController';
@@ -11,7 +12,9 @@ import { protect, authorize } from '../middlewares/auth';
 
 const router: Router = Router();
 
-// Admin
+router.route('/managerRequests').get(protect, authorize('admin'), getManagerRequests);
+
+
 router.route('/manager').get(protect, authorize('admin'), getProfiles);
 
 router.route('/manager/:id').get(protect, authorize('admin'), getProfile);

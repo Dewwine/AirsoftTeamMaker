@@ -1,12 +1,19 @@
 import { Response, Request } from 'express';
 
 import { getProfilesByTeam } from '../services/profileService';
-import { requestTeamById, cancelTeamById, leaveTeamById } from '../services/playerService';
+import {
+  getTeamRequestByProfileId,
+  requestTeamById,
+  cancelTeamById,
+  leaveTeamById,
+} from '../services/playerService';
+import { ITeamRequest } from '../models/teamRequestsModel';
+import { IProfile } from '../models/profileModel';
 
 // Player
 const applyTeam = async (req: Request, res: Response): Promise<void> => {
   const { id, team: playerTeam } = res.locals.profile;
-  
+
   const { team } = req.params;
   if (!team) {
     res.status(404).json({ message: 'Team not found' });
@@ -21,9 +28,15 @@ const applyTeam = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const playersInTeam = await getProfilesByTeam(team);
+  const playersInTeam: IProfile[] = await getProfilesByTeam(team);
   if (playersInTeam.length === 10) {
     res.status(400).json({ message: 'Team is full' });
+    return;
+  }
+
+  const teamRequest: ITeamRequest | null = await getTeamRequestByProfileId(id);
+  if (teamRequest) {
+    res.status(404).json({ message: 'You already have active request' });
     return;
   }
 
@@ -33,13 +46,15 @@ const applyTeam = async (req: Request, res: Response): Promise<void> => {
 };
 
 const cancelTeam = async (_req: Request, res: Response): Promise<void> => {
-  const { id, teamStatus } = res.locals.profile;
-  if (teamStatus !== 'waiting') {
+  const { id } = res.locals.profile;
+
+  const teamRequest: ITeamRequest | null = await getTeamRequestByProfileId(id);
+  if (!teamRequest) {
     res.status(400).json({ message: 'Your application was reviewed by manager' });
     return;
   }
 
-  await cancelTeamById(id);
+  await cancelTeamById(teamRequest);
 
   res.status(200).json({ message: 'Application cancelled' });
 };
@@ -48,6 +63,12 @@ const leaveTeam = async (_req: Request, res: Response): Promise<void> => {
   const { id, team } = res.locals.profile;
   if (!team) {
     res.status(400).json({ message: 'You are not on any team' });
+    return;
+  }
+
+  const teamRequest: ITeamRequest | null = await getTeamRequestByProfileId(id);
+  if (teamRequest) {
+    res.status(404).json({ message: 'You already have active request' });
     return;
   }
 
@@ -63,7 +84,7 @@ const getMyTeam = async (_req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const profiles = await getProfilesByTeam(team);
+  const profiles: IProfile[] = await getProfilesByTeam(team);
 
   res.status(200).json(profiles.map((profile) => profile.toResponse()));
 };

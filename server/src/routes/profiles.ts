@@ -14,7 +14,6 @@ const router: Router = Router();
 
 router.route('/teams/:team').get(protect, authorize('player', 'manager', 'admin'), getTeam);
 
-//
 router.route('/player').get(protect, authorize('player', 'manager', 'admin'), getProfiles);
 router.route('/player/:id').get(protect, authorize('player', 'manager', 'admin'), getProfile);
 router.route('/player/:id/kick').put(protect, authorize('manager', 'admin'), kickTeam);

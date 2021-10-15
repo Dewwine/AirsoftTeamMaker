@@ -2,6 +2,7 @@ require('dotenv').config();
 
 import crypto from 'crypto';
 import Profiles from '../models/profileModel';
+import ManagerRequests from '../models/managerRequestsModel';
 import { IProfileRequest, IProfile } from '../models/profileModel';
 import { Response } from 'express';
 import hashPassword from '../utils/hashPassword';
@@ -14,7 +15,7 @@ const createNewProfile = async (body: IProfileRequest): Promise<IProfile> => {
     login: body.login,
     password: password,
     role: body.role,
-    managerStatus: body.role === 'manager' ? 'waiting' : null,
+    isActive: body.role === 'manager' ? false : true,
   });
 };
 
@@ -28,7 +29,7 @@ const sendTokenResponse = (profile: IProfile, statusCode: number, res: Response)
     httpOnly: true,
   };
 
-  res.status(statusCode).cookie('token', token, options).json({ message: 'Successful login', token });
+  res.status(statusCode).cookie('token', token, options).json({ message: 'Success', token });
 };
 
 const resetCookieResponse = (message: string, statusCode: number, res: Response) => {
@@ -87,6 +88,13 @@ const createNewPassword = async (id: string, newPassword: string): Promise<void>
   );
 };
 
+const requestRegisterById = async (id: string): Promise<void> => {
+  await ManagerRequests.create({
+    status: 'waiting',
+    profileId: id,
+  });
+};
+
 export {
   createNewProfile,
   sendTokenResponse,
@@ -94,4 +102,5 @@ export {
   createNewPassword,
   createResetPasswordToken,
   deleteResetPasswordToken,
+  requestRegisterById,
 };

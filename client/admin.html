@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin</title>
+  </head>
+  <body>
+    <a href="./myprofile.html">back to profile</a>
+    <div id="root"></div>
+
+    <script
+      src="https://cdn.socket.io/4.2.0/socket.io.min.js"
+      integrity="sha384-PiBR5S00EtOj2Lto9Uu81cmoyZqR57XcOna1oAuVuIEjzj0wpqDVfD0JA9eXlRsj"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      if (!document.cookie) {
+        window.location.href = './index.html';
+      }
+
+      (async () => {
+        const response = await fetch('http://localhost:3000/api/me', {
+          headers: {
+            authorization: `Bearer ${document.cookie.split('=')[1]}`,
+          },
+        });
+
+        const data = await response.json();
+
+        const socket = io('http://localhost:3000');
+        socket.on('subscribe', () => {
+          socket.emit('join-room', { channel: `${data.role}` });
+        });
+
+        socket.on('new-notification', (res) => {
+          alert(res);
+        });
+
+        {
+          const response = await fetch('http://localhost:3000/api/managerRequests', {
+            headers: {
+              authorization: `Bearer ${document.cookie.split('=')[1]}`,
+            },
+          });
+
+          const data = await response.json();
+
+          data.forEach((el) => {
+            const request = document.createElement('div');
+            request.style = 'margin-top: 30px';
+
+            const id = document.createElement('div');
+            id.style = 'display: block;';
+            id.appendChild(document.createTextNode(`id: ${el.id}`));
+
+            const profileId = document.createElement('div');
+            profileId.style = 'width:100px; display: block;';
+            profileId.appendChild(document.createTextNode(`Profile: ${el.profileId}`));
+
+            const status = document.createElement('div');
+            status.appendChild(document.createTextNode(`status: ${el.status}`));
+
+            request.appendChild(id);
+            request.appendChild(profileId);
+            request.appendChild(status);
+
+            root.appendChild(request);
+
+            const approve = document.createElement('button');
+            approve.innerText = 'approve';
+            approve.style = 'margin-top: 30px';
+
+            root.appendChild(approve);
+            approve.addEventListener('click', async (e) => {
+              const application = await fetch(
+                `http://localhost:3000/api/manager/${el.profileId}/approve`,
+                {
+                  method: 'put',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+                  },
+                },
+              );
+
+              const data = JSON.parse(await application.text());
+
+              await alert(data.message);
+            });
+
+            const decline = document.createElement('button');
+            decline.innerText = 'decline';
+            decline.style = 'margin-top: 30px';
+
+            root.appendChild(decline);
+            decline.addEventListener('click', async (e) => {
+              const application = await fetch(
+                `http://localhost:3000/api/manager/${el.profileId}/decline`,
+                {
+                  method: 'put',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+                  },
+                },
+              );
+
+              const data = JSON.parse(await application.text());
+
+              await alert(data.message);
+            });
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

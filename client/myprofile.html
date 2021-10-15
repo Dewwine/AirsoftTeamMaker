@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <a href="./team.html">teams</a>
+
+    <div id="login"></div>
+    <img id="avatar" width="100px" />
+    <div id="role"></div>
+    <div id="team"></div>
+
+    <div style="margin-top: 100px">
+      <form class="updateForm">
+        <input type="text" name="login" id="newlogin" placeholder="New login" />
+        <input type="submit" value="Submit" />
+      </form>
+      <form class="updateForm">
+        <input type="password" name="password" id="password" placeholder="New password" />
+        <input type="submit" value="Submit" />
+      </form>
+      <form class="updateForm">
+        <input type="text" name="avatar" id="avatar" placeholder="New avatar" />
+        <input type="submit" value="Submit" />
+      </form>
+    </div>
+
+    <div style="margin-top: 100px">
+      <button id="logout">Logout</button>
+    </div>
+
+    <script
+      src="https://cdn.socket.io/4.2.0/socket.io.min.js"
+      integrity="sha384-PiBR5S00EtOj2Lto9Uu81cmoyZqR57XcOna1oAuVuIEjzj0wpqDVfD0JA9eXlRsj"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      if (!document.cookie) {
+        window.location.href = './index.html';
+      }
+
+      (async () => {
+        const response = await fetch('http://localhost:3000/api/me', {
+          headers: {
+            authorization: `Bearer ${document.cookie.split('=')[1]}`,
+          },
+        });
+        const data = await response.json();
+
+        const socket = io('http://localhost:3000');
+        await socket.on('subscribe', () => {
+          socket.emit('join-room', { channel: `${data.role}` });
+        });
+
+        socket.on('new-notification', (res) => {
+          alert(res);
+        });
+
+        {
+          const response = await fetch('http://localhost:3000/api/me', {
+            method: 'get',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+            },
+          });
+
+          const data = JSON.parse(await response.text());
+
+          const login = document.querySelector('#login');
+          const avatar = document.querySelector('#avatar');
+          const role = document.querySelector('#role');
+          const team = document.querySelector('#team');
+
+          login.innerHTML = `login: ${data.login}`;
+          avatar.src = data.avatar;
+          role.innerHTML = `role: ${data.role}`;
+          if (data.role === 'player') {
+            team.innerHTML = `team: ${data.team}`;
+          }
+        }
+
+        {
+          const updateForm = document.querySelectorAll('.updateForm');
+
+          updateForm.forEach((el) =>
+            el.addEventListener('submit', async function (e) {
+              e.preventDefault();
+
+              const updateData = JSON.stringify(Object.fromEntries(new FormData(this)));
+
+              const response = await fetch('http://localhost:3000/api/me', {
+                method: 'put',
+                body: updateData,
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+                },
+              });
+
+              responseText = await response.text();
+
+              if (response.status === 200) {
+                window.location.href = './profile.html';
+              } else {
+                alert(JSON.parse(responseText).message);
+              }
+            }),
+          );
+        }
+
+        {
+          const logout = document.querySelector('#logout');
+          logout.addEventListener('click', async function (e) {
+            e.preventDefault();
+
+            const response = await fetch('http://localhost:3000/api/logout', {
+              method: 'get',
+              headers: {
+                Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+              },
+            });
+
+            responseText = await response.text();
+
+            if (response.status === 200) {
+              document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+              window.location.href = './index.html';
+            } else {
+              alert(JSON.parse(responseText).message);
+            }
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

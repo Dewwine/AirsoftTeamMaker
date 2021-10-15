@@ -12,16 +12,19 @@ import {
   createResetPasswordToken,
   deleteResetPasswordToken,
   resetCookieResponse,
+  requestRegisterById,
 } from '../services/authService';
 import { IProfile } from '../models/profileModel';
 import { sendEmail } from '../utils/emailSender';
+import { getManagerRequestByProfileId } from '../services/adminService';
 
 const register = async (req: Request, res: Response) => {
   const { body } = req;
 
   const profile: IProfile = await createNewProfile(body);
-  if (profile.role === 'manager' && profile.managerStatus !== 'approved') {
-    res.status(400).json({ message: 'Your application on review' });
+  if (profile.role === 'manager') {
+    await requestRegisterById(profile.id);
+    res.status(201).json({ message: 'Your application was sent' });
     return;
   }
 
@@ -42,17 +45,28 @@ const login = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const isMatch = await profile.matchPassword(password);
+  const isMatch: boolean = await profile.matchPassword(password);
   if (!isMatch) {
     res.status(401).json({ message: 'Invalid password' });
     return;
   }
 
-  if (profile.role === 'manager' && profile.managerStatus !== 'approved') {
+  const managerRequest = await getManagerRequestByProfileId(profile.id);
+  if (profile.role === 'manager' && managerRequest) {
     res.status(400).json({ message: 'Your application on review' });
     return;
   }
-  
+
+  if (profile.role === 'manager' && !profile.isActive) {
+    res.status(400).json({ message: 'Your application was declined' });
+    return;
+  }
+
+  if (!profile.isActive) {
+    res.status(403).json({ message: 'Your account is suspended' });
+    return;
+  }
+
   sendTokenResponse(profile, 200, res);
 };
 
