@@ -19,7 +19,19 @@
       <button type="submit">Register</button>
     </form>
 
+    <script
+      src="https://cdn.socket.io/4.2.0/socket.io.min.js"
+      integrity="sha384-PiBR5S00EtOj2Lto9Uu81cmoyZqR57XcOna1oAuVuIEjzj0wpqDVfD0JA9eXlRsj"
+      crossorigin="anonymous"
+    ></script>
+
     <script>
+      if (document.cookie) {
+        window.location.href = './myprofile.html';
+      }
+
+      const socket = io('http://localhost:3000');
+
       {
         const registerForm = document.querySelector('#registerForm');
 
@@ -39,8 +51,14 @@
           responseText = await response.text();
 
           if (response.status === 200) {
-            document.cookie = `token=${JSON.parse(responseText).token}; max-age=${60*60*24*30}; path=/`;
+            document.cookie = `token=${JSON.parse(responseText).token}; max-age=${
+              60 * 60 * 24 * 30
+            }; path=/`;
             window.location.href = './myprofile.html';
+          } else if (response.status === 202) {
+            socket.emit('send-notification', `New manager register request`, `admin`);
+            alert(JSON.parse(responseText).message);
+            window.location.href = './index.html';
           } else {
             alert(JSON.parse(responseText).message);
             window.location.href = './index.html';

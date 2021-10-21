@@ -1,5 +1,15 @@
 version: "3.9"
 services:
+  mongodb:
+    image: mongo
+    container_name: mongo
+    restart: always
+    env_file: 
+      - .env
+    ports:
+      - 27017:27017
+    volumes: 
+      - ./mongodata:/var/lib/postgresql/data
   postgresdb:
     image: postgres
     container_name: postgres

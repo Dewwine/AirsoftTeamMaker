@@ -2,12 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta
+      name="google-signin-client_id"
+      content="1045784992606-af87g8ph1gddvimiv1dnvft2m6cevl6u.apps.googleusercontent.com"
+    />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
   </head>
   <body>
-    <a href="./team.html">teams</a>
+    <div id="links">
+      <a href="./team.html">teams</a>
+    </div>
 
     <div id="login"></div>
     <img id="avatar" width="100px" />
@@ -32,7 +39,7 @@
     <div style="margin-top: 100px">
       <button id="logout">Logout</button>
     </div>
-
+    
     <script
       src="https://cdn.socket.io/4.2.0/socket.io.min.js"
       integrity="sha384-PiBR5S00EtOj2Lto9Uu81cmoyZqR57XcOna1oAuVuIEjzj0wpqDVfD0JA9eXlRsj"
@@ -52,9 +59,40 @@
         });
         const data = await response.json();
 
+        if (data.role === 'admin' || data.role === 'manager') {
+          const links = document.querySelector('#links');
+          const profiles = document.createElement('a');
+          profiles.innerText = 'profiles';
+          profiles.href = './profiles.html';
+
+          links.appendChild(profiles);
+        }
+
+        if (data.role === 'admin') {
+          const links = document.querySelector('#links');
+          const linkWrapper = document.createElement('div');
+          const adminPage = document.createElement('a');
+          adminPage.innerText = 'Admin Page';
+          adminPage.href = './admin.html';
+
+          links.appendChild(linkWrapper);
+          linkWrapper.appendChild(adminPage);
+        }
+
+        if (data.role === 'manager') {
+          const links = document.querySelector('#links');
+          const linkWrapper = document.createElement('div');
+          const managerPage = document.createElement('a');
+          managerPage.innerText = 'Manager Page';
+          managerPage.href = './manager.html';
+
+          links.appendChild(linkWrapper);
+          linkWrapper.appendChild(managerPage);
+        }
+
         const socket = io('http://localhost:3000');
         await socket.on('subscribe', () => {
-          socket.emit('join-room', { channel: `${data.role}` });
+          socket.emit('join-room', { channel: `${data.role}`, userId: `${data.id}` });
         });
 
         socket.on('new-notification', (res) => {
@@ -130,7 +168,7 @@
 
             if (response.status === 200) {
               document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-              window.location.href = './index.html';
+              window.location.href = './login.html';
             } else {
               alert(JSON.parse(responseText).message);
             }

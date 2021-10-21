@@ -2,6 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta
+      name="google-signin-client_id"
+      content="1045784992606-af87g8ph1gddvimiv1dnvft2m6cevl6u.apps.googleusercontent.com"
+    />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>login</title>
@@ -14,6 +19,8 @@
       <input type="password" name="password" id="password" placeholder="password" />
       <input type="submit" value="Submit" />
     </form>
+    <div class="g-signin2" data-onsuccess="onSignIn" style="margin-top: 10px"></div>
+    <!-- <a href="#" onclick="signOut();">Sign out</a> -->
 
     <form id="forgetForm" method="POST" style="margin-top: 100px">
       <input type="text" name="email" id="email" placeholder="email" />
@@ -21,6 +28,43 @@
     </form>
 
     <script>
+      if (document.cookie) {
+        window.location.href = './myprofile.html';
+      }
+
+      async function onSignIn(googleUser) {
+        const id_token = JSON.stringify({ id_token: googleUser.getAuthResponse().id_token });
+
+        const response = await fetch('http://localhost:3000/api/googleAuth', {
+          method: 'post',
+          body: id_token,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        responseText = await response.text();
+
+        if (response.status === 200) {
+          document.cookie =
+            'G_AUTHUSER_H=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/AirsoftTeamMaker/client;';
+          document.cookie = `token=${JSON.parse(responseText).token}; max-age=${
+            60 * 60 * 24 * 30
+          }; path=/`;
+          signOut();
+          window.location.href = './myprofile.html';
+        } else {
+          alert(JSON.parse(responseText).message);
+        }
+      }
+
+      function signOut() {
+        const auth2 = gapi.auth2.getAuthInstance();
+        auth2.signOut().then(function () {
+          console.log('User signed out.');
+        });
+      }
+
       {
         const loginForm = document.querySelector('#loginForm');
 
@@ -40,7 +84,9 @@
           responseText = await response.text();
 
           if (response.status === 200) {
-            document.cookie = `token=${JSON.parse(responseText).token}; max-age=${60*60*24*30}; path=/`;
+            document.cookie = `token=${JSON.parse(responseText).token}; max-age=${
+              60 * 60 * 24 * 30
+            }; path=/`;
             window.location.href = './myprofile.html';
           } else {
             alert(JSON.parse(responseText).message);

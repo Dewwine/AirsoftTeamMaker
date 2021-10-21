@@ -4,27 +4,36 @@ import {
   getProfileByLogin,
   getProfileByEmail,
   getProfileByResetToken,
+  checkActiveProfile
 } from '../services/profileService';
 import {
   createNewPassword,
   createNewProfile,
+  createSuspendTable,
   sendTokenResponse,
   createResetPasswordToken,
   deleteResetPasswordToken,
   resetCookieResponse,
   requestRegisterById,
+  deleteUserProfile,
+  verifyGoogleToken,
 } from '../services/authService';
-import { IProfile } from '../models/profileModel';
+import { IProfile, IProfileRequest } from '../models/profileModel';
 import { sendEmail } from '../utils/emailSender';
 import { getManagerRequestByProfileId } from '../services/adminService';
+import { IManagerRequest } from '../models/managerRequestsModel';
+import { ISuspend } from '../models/suspendModel';
 
 const register = async (req: Request, res: Response) => {
   const { body } = req;
 
   const profile: IProfile = await createNewProfile(body);
+  
+  await createSuspendTable(profile);
+
   if (profile.role === 'manager') {
     await requestRegisterById(profile.id);
-    res.status(201).json({ message: 'Your application was sent' });
+    res.status(202).json({ message: 'Your application was sent' });
     return;
   }
 
@@ -51,20 +60,44 @@ const login = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const managerRequest = await getManagerRequestByProfileId(profile.id);
+  const managerRequest: IManagerRequest | null = await getManagerRequestByProfileId(profile.id);
   if (profile.role === 'manager' && managerRequest) {
     res.status(400).json({ message: 'Your application on review' });
     return;
   }
 
-  if (profile.role === 'manager' && !profile.isActive) {
+  const activeProfile: ISuspend | null = await checkActiveProfile(profile.id);
+  if (!activeProfile) {
+    res.status(403).json({ message: 'Something went wrong' });
+    return;
+  }
+
+  if (profile.role === 'manager' && !activeProfile.isActive) {
     res.status(400).json({ message: 'Your application was declined' });
     return;
   }
 
-  if (!profile.isActive) {
+  if (!activeProfile.isActive) {
     res.status(403).json({ message: 'Your account is suspended' });
     return;
+  }
+
+  sendTokenResponse(profile, 200, res);
+};
+
+const googleAuth = async (req: Request, res: Response) => {
+  const { id_token } = req.body;
+
+  const profileData: IProfileRequest | void = await verifyGoogleToken(id_token);
+  if (!profileData) {
+    res.status(401).json({ message: 'Account not exists' });
+    return;
+  }
+
+  let profile: IProfile | null = await getProfileByLogin(profileData.login);
+  if (!profile) {
+    profile = await createNewProfile(profileData);
+    await createSuspendTable(profile);
   }
 
   sendTokenResponse(profile, 200, res);
@@ -83,9 +116,9 @@ const forgotPassword = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const resetToken = await createResetPasswordToken(profile.id);
+  const resetToken: string = await createResetPasswordToken(profile.id);
 
-  const resetMessage = `Your password reset url is: ${resetToken}`;
+  const resetMessage: string = `Your password reset url is: ${resetToken}`;
 
   try {
     await sendEmail({
@@ -104,12 +137,12 @@ const forgotPassword = async (req: Request, res: Response): Promise<void> => {
 };
 
 const resetPassword = async (req: Request, res: Response): Promise<void> => {
-  const resetPasswordToken = crypto
+  const resetPasswordToken: string = crypto
     .createHash('sha256')
     .update(req.params.resettoken as BinaryLike)
     .digest('hex');
 
-  const profile = await getProfileByResetToken(resetPasswordToken);
+  const profile: IProfile | null = await getProfileByResetToken(resetPasswordToken);
   if (!profile) {
     res.status(400).json({ message: 'Invalid token' });
     return;
@@ -120,4 +153,28 @@ const resetPassword = async (req: Request, res: Response): Promise<void> => {
   sendTokenResponse(profile, 200, res);
 };
 
-export { register, login, logout, forgotPassword, resetPassword };
+const deleteProfile = async (req: Request, res: Response): Promise<void> => {
+  const { login: profileLogin, password } = req.body;
+  if (!profileLogin || !password) {
+    res.status(400).json({ message: 'No login or password' });
+    return;
+  }
+
+  const profile: IProfile | null = await getProfileByLogin(profileLogin);
+  if (!profile) {
+    res.status(401).json({ message: 'Invalid login' });
+    return;
+  }
+
+  const isMatch: boolean = await profile.matchPassword(password);
+  if (!isMatch) {
+    res.status(401).json({ message: 'Invalid password' });
+    return;
+  }
+
+  await deleteUserProfile(profile);
+
+  res.status(200).json({ message: 'Profile deleted' });
+};
+
+export { register, login, logout, forgotPassword, resetPassword, deleteProfile, googleAuth };

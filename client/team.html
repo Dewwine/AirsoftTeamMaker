@@ -7,7 +7,9 @@
     <title>Document</title>
   </head>
   <body>
-    <a href="./myprofile.html">back</a>
+    <div id="links">
+      <a href="./myprofile.html">my profile</a>
+    </div>
 
     <div>
       <a href="#" class="team_btn">teamA</a>
@@ -34,11 +36,20 @@
         });
         const data = await response.json();
 
+        if (data.role === 'admin' || data.role === 'manager') {
+          const links = document.querySelector('#links');
+          const profiles = document.createElement('a');
+          profiles.innerText = 'profiles';
+          profiles.href = './profiles.html';
+
+          links.appendChild(profiles)
+        }
+
         const profileId = data.id;
 
         const socket = io('http://localhost:3000');
         await socket.on('subscribe', () => {
-          socket.emit('join-room', { channel: `${data.role}` });
+          socket.emit('join-room', { channel: `${data.role}`, userId: `${data.id}` });
         });
 
         socket.on('new-notification', (res) => {
@@ -93,7 +104,29 @@
             const data = JSON.parse(await application.text());
 
             if (application.status === 200) {
-              socket.emit('send-notification', `Profile id:${profileId} send request`, `manager`);
+              socket.emit('send-notification', `Profile id:${profileId} send request`, [`manager`, `admin`]);
+            }
+
+            await alert(data.message);
+          });
+
+          const cancelButton = document.createElement('button');
+          cancelButton.innerText = 'cancel';
+          cancelButton.style = 'margin-top: 30px';
+          root.appendChild(cancelButton);
+          cancelButton.addEventListener('click', async (e) => {
+            const application = await fetch(`http://localhost:3000/api/teams/${reqTeam}/cancel`, {
+              method: 'delete',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+              },
+            });
+
+            const data = JSON.parse(await application.text());
+
+            if (application.status === 200) {
+              socket.emit('send-notification', `Profile id:${profileId} cancel request`, [`manager`, `admin`]);
             }
 
             await alert(data.message);

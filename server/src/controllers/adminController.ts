@@ -120,7 +120,7 @@ const getManagerRequests = async (_req: Request, res: Response) => {
     res.status(404).json({ message: 'Applications not found' });
     return;
   }
-
+  
   res.status(200).json(teamApplications);
 };
 

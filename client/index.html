@@ -1,31 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  <a href="./login.html">login</a>
-  <a href="./register.html">register</a>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <a href="./login.html">login</a>
+    <a href="./register.html">register</a>
 
-  <script>
-
-    // const main = async () => {
-    //   let response = await fetch('http://localhost:3000/api', {
-    //     headers: {
-    //       authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2dpbiI6IjEiLCJpZCI6MSwidGltZSI6IjIwMjEtMTAtMTBUMTU6Mjc6MDUuODQ4WiIsImlhdCI6MTYzMzk0ODQ0NywiZXhwIjoxNjM2NTQwNDQ3fQ.nxYLuS8MgmiXTyWsf188rDdpNA-_FadHRVBagit_NDo'
-    //     }
-    //   });
-  
-
-    //   let data = await response.json();
-    //   document.querySelector('.test').innerHTML = JSON.stringify(data);
-    //   // document.querySelector('.test').innerHTML = data[0].login;
-    // }
-
-    // main();
-  </script>
-</body>
+    <script>
+      if (document.cookie) {
+        window.location.href = './myprofile.html';
+      }
+    </script>
+  </body>
 </html>

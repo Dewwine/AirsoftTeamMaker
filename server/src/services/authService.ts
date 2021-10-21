@@ -2,19 +2,30 @@ require('dotenv').config();
 
 import crypto from 'crypto';
 import Profiles from '../models/profileModel';
+// import RoleModel from '../models/roleModel';
+import suspendTable from '../models/suspendModel';
 import ManagerRequests from '../models/managerRequestsModel';
 import { IProfileRequest, IProfile } from '../models/profileModel';
+import { ISuspend } from '../models/suspendModel';
 import { Response } from 'express';
 import hashPassword from '../utils/hashPassword';
 
+import { OAuth2Client } from 'google-auth-library';
+
 const createNewProfile = async (body: IProfileRequest): Promise<IProfile> => {
   const password: string = await hashPassword(body.password);
-
+  
   return await Profiles.create({
     email: body.email,
     login: body.login,
     password: password,
     role: body.role,
+  });
+};
+
+const createSuspendTable = async (body: IProfile): Promise<ISuspend> => {
+  return await suspendTable.create({
+    profileId: body.id,
     isActive: body.role === 'manager' ? false : true,
   });
 };
@@ -88,6 +99,10 @@ const createNewPassword = async (id: string, newPassword: string): Promise<void>
   );
 };
 
+const deleteUserProfile = async (profile: IProfile): Promise<void> => {
+  await profile.destroy();
+};
+
 const requestRegisterById = async (id: string): Promise<void> => {
   await ManagerRequests.create({
     status: 'waiting',
@@ -95,12 +110,39 @@ const requestRegisterById = async (id: string): Promise<void> => {
   });
 };
 
+const verifyGoogleToken = async (token: string): Promise<IProfileRequest | void> => {
+  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+  if (!payload) {
+    return;
+  }
+
+  const profileData: IProfileRequest = {
+    email: `${payload.email}`,
+    login: `${payload.name}`,
+    password: `${payload.given_name}${payload.family_name}`,
+    avatar: `${payload.picture}`,
+    role: 'player',
+  };
+
+  return profileData;
+};
+
 export {
   createNewProfile,
+  createSuspendTable,
   sendTokenResponse,
   resetCookieResponse,
   createNewPassword,
   createResetPasswordToken,
   deleteResetPasswordToken,
   requestRegisterById,
+  deleteUserProfile,
+  verifyGoogleToken,
 };

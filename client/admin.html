@@ -7,7 +7,10 @@
     <title>Admin</title>
   </head>
   <body>
-    <a href="./myprofile.html">back to profile</a>
+    <div id="links">
+      <a href="./myprofile.html">my profile</a>
+      <a href="./team.html">teams</a>
+    </div>
     <div id="root"></div>
 
     <script
@@ -29,6 +32,15 @@
         });
 
         const data = await response.json();
+
+        if (data.role === 'admin' || data.role === 'manager') {
+          const links = document.querySelector('#links');
+          const profiles = document.createElement('a');
+          profiles.innerText = 'profiles';
+          profiles.href = './profiles.html';
+
+          links.appendChild(profiles)
+        }
 
         const socket = io('http://localhost:3000');
         socket.on('subscribe', () => {

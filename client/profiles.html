@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="links">
+      <a href="./myprofile.html">my profile</a>
+      <a href="./team.html">teams</a>
+      <!-- <a href="#" class="profile_btn">player</a>
+      <a href="#" class="profile_btn">manager</a> -->
+    </div>
+
+    <div>
+      <div id="root"></div>
+    </div>
+
+    <script
+      src="https://cdn.socket.io/4.2.0/socket.io.min.js"
+      integrity="sha384-PiBR5S00EtOj2Lto9Uu81cmoyZqR57XcOna1oAuVuIEjzj0wpqDVfD0JA9eXlRsj"
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      if (!document.cookie) {
+        window.location.href = './index.html';
+      }
+
+      (async () => {
+        const response = await fetch('http://localhost:3000/api/me', {
+          headers: {
+            authorization: `Bearer ${document.cookie.split('=')[1]}`,
+          },
+        });
+        const data = await response.json();
+
+        const profileId = data.id;
+
+        const socket = io('http://localhost:3000');
+        await socket.on('subscribe', () => {
+          socket.emit('join-room', { channel: `${data.role}`, userId: `${data.id}` });
+        });
+
+        socket.on('new-notification', (res) => {
+          alert(res);
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // const profiles = document.querySelectorAll('.profile_btn');
+        // profiles.forEach((el) => {
+        //   el.addEventListener('click', (e) => {
+        //     e.preventDefault();
+        //     urlParams.set('profile', el.innerHTML);
+        //     window.location.search = urlParams.toString();
+        //   });
+        // });
+
+        if (data.role === 'admin') {
+          const links = document.querySelector('#root');
+          const player = document.createElement('a');
+          const manager = document.createElement('a');
+          player.innerText = 'player';
+          manager.innerText = 'manager';
+          manager.style = 'margin-left: 5px';
+          player.href = './profile.html';
+          manager.href = './profile.html';
+
+          player.addEventListener('click', (e) => {
+            e.preventDefault();
+            urlParams.set('profile', 'player');
+            window.location.search = urlParams.toString();
+          });
+          manager.addEventListener('click', (e) => {
+            e.preventDefault();
+            urlParams.set('profile', 'manager');
+            window.location.search = urlParams.toString();
+          });
+
+          links.appendChild(player)
+          links.appendChild(manager)
+        }
+
+        if (data.role === 'manager') {
+          const links = document.querySelector('#root');
+          const player = document.createElement('a');
+          player.innerText = 'player';
+          player.href = './profile.html';
+
+          player.addEventListener('click', (e) => {
+            e.preventDefault();
+            urlParams.set('profile', 'manager');
+            window.location.search = urlParams.toString();
+          });
+          links.appendChild(player)
+        }
+
+
+        {
+          const reqProfile = urlParams.get('profile');
+          if (!reqProfile) {
+            return;
+          }
+
+          const response = await fetch(`http://localhost:3000/api/${reqProfile}`, {
+            method: 'get',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+            },
+          });
+
+          const data = JSON.parse(await response.text());
+          if (!data) {
+            return;
+          }
+
+          const root = document.querySelector('#root');
+
+          data.forEach((el) => {
+            const profile = document.createElement('div');
+            profile.style = 'margin-top: 30px';
+
+            const login = document.createElement('a');
+            login.style = 'display: block;';
+            login.appendChild(document.createTextNode(el.login));
+            login.href = `./profile.html?role=${el.role}&id=${el.id}`;
+
+            const avatar = document.createElement('img');
+            avatar.src = el.avatar;
+            avatar.style = 'width:100px; display: block;';
+
+            const role = document.createElement('div');
+            role.appendChild(document.createTextNode(el.role));
+
+            profile.appendChild(login);
+            profile.appendChild(avatar);
+            profile.appendChild(role);
+
+            if (el.role === 'player') {
+              const team = document.createElement('div');
+              team.appendChild(document.createTextNode(el.team));
+              profile.appendChild(team);
+            }
+
+            root.appendChild(profile);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

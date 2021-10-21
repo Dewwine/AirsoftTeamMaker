@@ -6,6 +6,8 @@ import {
   logout,
   forgotPassword,
   resetPassword,
+  deleteProfile,
+  googleAuth
 } from '../controllers/authController';
 
 const router: Router = Router();
@@ -13,6 +15,10 @@ const router: Router = Router();
 router.route('/register').post(register);
 
 router.route('/login').post(login);
+
+router.route('/googleAuth').post(googleAuth);
+
+router.route('/deleteprofile').delete(deleteProfile);
 
 router.route('/logout').get(logout);
 

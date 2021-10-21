@@ -6,9 +6,11 @@ import {
   updateProfileById,
   getProfilesByTeam,
   kickTeamById,
+  checkActiveProfile
 } from '../services/profileService';
 
-import { IProfile } from '../models/profileModel';
+import { IProfile, IProfileResponse } from '../models/profileModel';
+import { ISuspend } from '../models/suspendModel';
 
 const getProfiles = async (req: Request, res: Response): Promise<void> => {
   const role = req.path.split('/')[1];
@@ -19,6 +21,10 @@ const getProfiles = async (req: Request, res: Response): Promise<void> => {
   }
 
   const profiles: IProfile[] = await getAllProfilesByRole(role);
+  if (!profiles) {
+    res.status(200).json({ message: 'Something went wrong' });
+    return;
+  }
 
   res.status(200).json(profiles.map((profile) => profile.toResponse()));
 };
@@ -55,17 +61,25 @@ const getProfile = async (req: Request, res: Response): Promise<void> => {
     res.status(200).json({ message: 'Profile not found' });
     return;
   }
+  
+  const suspendInfo = await checkActiveProfile(profile.id);
+  if (!suspendInfo) {
+    res.status(200).json({ message: 'Something went wrong' });
+    return;
+  }
 
-  res.status(200).json(profile.toResponse());
+  const returnedProfile: IProfileResponse & ISuspend = Object.assign(profile.toResponse(), suspendInfo);
+  res.status(200).json(returnedProfile);
 };
 
 const getMe = async (_req: Request, res: Response): Promise<void> => {
   const profile: IProfile | null = res.locals.profile;
+  
   if (!profile) {
     res.status(200).json({ message: 'Profile not found' });
     return;
   }
-
+  
   res.status(200).json(profile.toResponse());
 };
 

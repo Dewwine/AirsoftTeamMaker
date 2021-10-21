@@ -7,12 +7,17 @@
     <title>Document</title>
   </head>
   <body>
-    <a href="./team.html">back to teams</a>
+    <div id="links">
+      <a href="./myprofile.html">my profile</a>
+      <a href="./team.html">teams</a>
+    </div>
 
     <div id="login"></div>
     <img id="avatar" width="100px" />
     <div id="role"></div>
     <div id="team"></div>
+
+    <div id="root"></div>
 
     <script
       src="https://cdn.socket.io/4.2.0/socket.io.min.js"
@@ -26,16 +31,70 @@
       }
 
       (async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const reqRole = urlParams.get('role');
+        const reqId = urlParams.get('id');
+
+        // Get profile
+        const user = await fetch(`http://localhost:3000/api/player/${reqId}`, {
+          headers: {
+            authorization: `Bearer ${document.cookie.split('=')[1]}`,
+          },
+        });
+        const thisUser = await user.json();
+
+        // Get logged user
         const response = await fetch('http://localhost:3000/api/me', {
           headers: {
             authorization: `Bearer ${document.cookie.split('=')[1]}`,
           },
         });
-        const data = await response.json();
+        const currentProfile = await response.json();
+
+        if (currentProfile.role === 'admin' || currentProfile.role === 'manager') {
+          const links = document.querySelector('#links');
+          const profiles = document.createElement('a');
+          profiles.innerText = 'profiles';
+          profiles.href = './profiles.html';
+
+          links.appendChild(profiles);
+        }
 
         const socket = io('http://localhost:3000');
+
+        if (
+          (currentProfile.role === 'admin' || currentProfile.role === 'manager') &&
+          thisUser.role === 'player'
+        ) {
+          const root = document.querySelector('#root');
+          const kick = document.createElement('button');
+          const kickReasonInput = document.createElement('input');
+          root.style = 'margin-top: 50px';
+
+          if (thisUser.team) {
+            kick.innerText = 'Kick user';
+            root.appendChild(kickReasonInput);
+            root.appendChild(kick);
+
+            kick.addEventListener('click', async (e) => {
+              const application = await fetch(`http://localhost:3000/api/player/${reqId}/kick`, {
+                method: 'put',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+                },
+                body: JSON.stringify({ kickReason: `${kickReasonInput.value}` }),
+              });
+
+              const currentProfile = JSON.parse(await application.text());
+
+              await alert(currentProfile.message);
+            });
+          }
+        }
+
         await socket.on('subscribe', () => {
-          socket.emit('join-room', { channel: `${data.role}` });
+          socket.emit('join-room', { channel: `${currentProfile.role}`, userId: `${data.id}` });
         });
 
         socket.on('new-notification', (res) => {
@@ -43,10 +102,6 @@
         });
 
         {
-          const urlParams = new URLSearchParams(window.location.search);
-          const reqRole = urlParams.get('role');
-          const reqId = urlParams.get('id');
-
           const response = await fetch(`http://localhost:3000/api/${reqRole}/${reqId}`, {
             method: 'get',
             headers: {
@@ -55,20 +110,76 @@
             },
           });
 
-          const data = JSON.parse(await response.text());
+          const profile = JSON.parse(await response.text());
 
-          if (data.message) {
-            alert(data.message);
+          if (profile.message) {
+            alert(profile.message);
           } else {
             const login = document.querySelector('#login');
             const avatar = document.querySelector('#avatar');
             const role = document.querySelector('#role');
             const team = document.querySelector('#team');
 
-            login.innerHTML = `login: ${data.login}`;
-            avatar.src = data.avatar;
-            role.innerHTML = `role: ${data.role}`;
-            team.innerHTML = `team: ${data.team}`;
+            login.innerHTML = `login: ${profile.login}`;
+            avatar.src = profile.avatar;
+            role.innerHTML = `role: ${profile.role}`;
+            if (profile.role === 'player') {
+              team.innerHTML = `team: ${profile.team}`;
+            }
+          }
+
+          // Ban/Unban user
+          if (currentProfile.role === 'admin') {
+            const root = document.querySelector('#root');
+            const ban = document.createElement('button');
+            const suspendReasonInput = document.createElement('input');
+            root.style = 'margin-top: 50px';
+            
+            if (profile.dataValues.isActive === 'true') {
+              ban.innerText = 'Ban user';
+              root.appendChild(suspendReasonInput);
+              root.appendChild(ban);
+
+              ban.addEventListener('click', async (e) => {
+                const application = await fetch(
+                  `http://localhost:3000/api/${reqRole}/${reqId}/ban`,
+                  {
+                    method: 'put',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+                    },
+                    body: JSON.stringify({ suspendReason: `${suspendReasonInput.value}` }),
+                  },
+                );
+
+                const currentProfile = JSON.parse(await application.text());
+
+                await alert(currentProfile.message);
+              });
+            } else if (profile.dataValues.isActive === 'false') {
+              ban.innerText = 'Unban user';
+              root.appendChild(suspendReasonInput);
+              root.appendChild(ban);
+
+              ban.addEventListener('click', async (e) => {
+                const application = await fetch(
+                  `http://localhost:3000/api/${reqRole}/${reqId}/unban`,
+                  {
+                    method: 'put',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+                    },
+                    body: JSON.stringify({ suspendReason: `${suspendReasonInput.value}` }),
+                  },
+                );
+
+                const currentProfile = JSON.parse(await application.text());
+
+                await alert(currentProfile.message);
+              });
+            }
           }
         }
       })();

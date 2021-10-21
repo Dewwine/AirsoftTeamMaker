@@ -5,5 +5,6 @@ const mongoUser: string = process.env.MONGODB_USER || '';
 const mongoPassword: string = process.env.MONGODB_PASSWORD || '';
 
 const mongoUrl: string = `mongodb+srv://${mongoUser}:${mongoPassword}@cluster0.zmkox.mongodb.net/${mongoName}?retryWrites=true&w=majority`;
+// const mongoUrl: string = `mongodb://mongo:27017/logSchema`;
 
 export default mongoUrl;

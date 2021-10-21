@@ -1,3 +1,4 @@
+import suspendTable, { ISuspend } from '../models/suspendModel';
 import Profiles from '../models/profileModel';
 import { IProfileRequest, IProfile } from '../models/profileModel';
 import Sequelize from 'sequelize';
@@ -11,13 +12,12 @@ const getAllProfilesByRole = async (role: string): Promise<Array<IProfile>> =>
 const getProfilesByTeam = async (team: string): Promise<Array<IProfile>> =>
   await Profiles.findAll({ where: { team: team } });
 
-const getProfileById = async (id: string): Promise<IProfile | null> =>
-  await Profiles.findByPk(id);
+const getProfileById = async (id: string): Promise<IProfile | null> => await Profiles.findByPk(id);
 
-const getProfileByIdAndRole = async (
-  id: string,
-  role: string,
-): Promise<IProfile | null> =>
+const checkActiveProfile = async (id: string): Promise<ISuspend | null> =>
+  await suspendTable.findByPk(id);
+
+const getProfileByIdAndRole = async (id: string, role: string): Promise<IProfile | null> =>
   await Profiles.findOne({
     where: {
       id: id,
@@ -31,9 +31,7 @@ const getProfileByLogin = async (login: string): Promise<IProfile | null> =>
 const getProfileByEmail = async (email: string): Promise<IProfile | null> =>
   await Profiles.findOne({ where: { email: email } });
 
-const getProfileByResetToken = async (
-  resetPasswordToken: string,
-): Promise<IProfile | null> =>
+const getProfileByResetToken = async (resetPasswordToken: string): Promise<IProfile | null> =>
   await Profiles.findOne({
     where: {
       resetPasswordToken,
@@ -75,6 +73,7 @@ const kickTeamById = async (id: string, reason: string): Promise<void> => {
 export {
   getAllProfilesByRole,
   getProfileById,
+  checkActiveProfile,
   getProfileByIdAndRole,
   updateProfileById,
   getProfileByLogin,

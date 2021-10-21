@@ -9,7 +9,6 @@ interface IProfileRequest {
   password: string;
   role: string;
   avatar: string;
-  team: string;
 }
 
 interface IProfileResponse {
@@ -31,8 +30,6 @@ interface IProfile extends Model {
   avatar: string;
   team: string;
   kickReason: string;
-  isActive: boolean;
-  suspendReason: string;
   createdAt: Date;
 
   getSignedJwtToken(): string;
@@ -51,8 +48,6 @@ class ProfileModel extends Model implements IProfile {
   public avatar!: string;
   public team!: string;
   public kickReason!: string;
-  public isActive!: boolean;
-  public suspendReason!: string;
 
   public readonly createdAt!: Date;
 
@@ -120,13 +115,6 @@ ProfileModel.init(
       type: DataTypes.STRING,
     },
     kickReason: {
-      type: DataTypes.STRING,
-    },
-    isActive: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-    },
-    suspendReason: {
       type: DataTypes.STRING,
     },
   },
