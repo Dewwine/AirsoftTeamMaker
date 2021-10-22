@@ -51,7 +51,7 @@
         });
         const currentProfile = await response.json();
 
-        if (currentProfile.role === 'admin' || currentProfile.role === 'manager') {
+        if (currentProfile.roleId === 1 || currentProfile.roleId === 2) {
           const links = document.querySelector('#links');
           const profiles = document.createElement('a');
           profiles.innerText = 'profiles';
@@ -63,8 +63,8 @@
         const socket = io('http://localhost:3000');
 
         if (
-          (currentProfile.role === 'admin' || currentProfile.role === 'manager') &&
-          thisUser.role === 'player'
+          (currentProfile.roleId === 1 || currentProfile.roleId === 2) &&
+          thisUser.roleId === 3
         ) {
           const root = document.querySelector('#root');
           const kick = document.createElement('button');
@@ -94,7 +94,7 @@
         }
 
         await socket.on('subscribe', () => {
-          socket.emit('join-room', { channel: `${currentProfile.role}`, userId: `${data.id}` });
+          socket.emit('join-room', { channel: `${currentProfile.role.name}`, userId: `${currentProfile.id}` });
         });
 
         socket.on('new-notification', (res) => {
@@ -122,20 +122,20 @@
 
             login.innerHTML = `login: ${profile.login}`;
             avatar.src = profile.avatar;
-            role.innerHTML = `role: ${profile.role}`;
-            if (profile.role === 'player') {
+            role.innerHTML = `role: ${profile.role.name}`;
+            if (profile.roleId === 3) {
               team.innerHTML = `team: ${profile.team}`;
             }
           }
 
           // Ban/Unban user
-          if (currentProfile.role === 'admin') {
+          if (currentProfile.roleId === 1) {
             const root = document.querySelector('#root');
             const ban = document.createElement('button');
             const suspendReasonInput = document.createElement('input');
             root.style = 'margin-top: 50px';
             
-            if (profile.dataValues.isActive === 'true') {
+            if (profile.isActive === 'true') {
               ban.innerText = 'Ban user';
               root.appendChild(suspendReasonInput);
               root.appendChild(ban);
@@ -157,7 +157,7 @@
 
                 await alert(currentProfile.message);
               });
-            } else if (profile.dataValues.isActive === 'false') {
+            } else if (profile.isActive === 'false') {
               ban.innerText = 'Unban user';
               root.appendChild(suspendReasonInput);
               root.appendChild(ban);

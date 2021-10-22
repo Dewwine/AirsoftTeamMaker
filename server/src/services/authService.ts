@@ -1,9 +1,7 @@
 require('dotenv').config();
 
 import crypto from 'crypto';
-import Profiles from '../models/profileModel';
-// import RoleModel from '../models/roleModel';
-import suspendTable from '../models/suspendModel';
+import { ProfileModel, SuspendModel, RoleModel } from '../models/associate';
 import ManagerRequests from '../models/managerRequestsModel';
 import { IProfileRequest, IProfile } from '../models/profileModel';
 import { ISuspend } from '../models/suspendModel';
@@ -14,19 +12,21 @@ import { OAuth2Client } from 'google-auth-library';
 
 const createNewProfile = async (body: IProfileRequest): Promise<IProfile> => {
   const password: string = await hashPassword(body.password);
-  
-  return await Profiles.create({
+
+  const role = await RoleModel.findOne({ where: { name: body.role } });
+
+  return await ProfileModel.create({
     email: body.email,
     login: body.login,
     password: password,
-    role: body.role,
+    roleId: role!.id,
   });
 };
 
 const createSuspendTable = async (body: IProfile): Promise<ISuspend> => {
-  return await suspendTable.create({
+  return await SuspendModel.create({
     profileId: body.id,
-    isActive: body.role === 'manager' ? false : true,
+    isActive: body.roleId === 2 ? false : true,
   });
 };
 
@@ -55,7 +55,7 @@ const resetCookieResponse = (message: string, statusCode: number, res: Response)
 const createResetPasswordToken = async (id: string): Promise<string> => {
   const resetToken: string = crypto.randomBytes(20).toString('hex');
 
-  await Profiles.update(
+  await ProfileModel.update(
     {
       resetPasswordToken: crypto.createHash('sha256').update(resetToken).digest('hex'),
       resetPasswordExpire: new Date(Date.now() + 10 * 60 * 1000),
@@ -71,7 +71,7 @@ const createResetPasswordToken = async (id: string): Promise<string> => {
 };
 
 const deleteResetPasswordToken = async (id: string): Promise<void> => {
-  await Profiles.update(
+  await ProfileModel.update(
     {
       resetPasswordToken: null,
       resetPasswordExpire: null,
@@ -85,7 +85,7 @@ const deleteResetPasswordToken = async (id: string): Promise<void> => {
 };
 
 const createNewPassword = async (id: string, newPassword: string): Promise<void> => {
-  await Profiles.update(
+  await ProfileModel.update(
     {
       password: await hashPassword(newPassword),
       resetPasswordToken: null,

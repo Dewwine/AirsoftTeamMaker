@@ -10,8 +10,6 @@
     <div id="links">
       <a href="./myprofile.html">my profile</a>
       <a href="./team.html">teams</a>
-      <!-- <a href="#" class="profile_btn">player</a>
-      <a href="#" class="profile_btn">manager</a> -->
     </div>
 
     <div>
@@ -41,7 +39,7 @@
 
         const socket = io('http://localhost:3000');
         await socket.on('subscribe', () => {
-          socket.emit('join-room', { channel: `${data.role}`, userId: `${data.id}` });
+          socket.emit('join-room', { channel: `${data.role.name}`, userId: `${data.id}` });
         });
 
         socket.on('new-notification', (res) => {
@@ -50,16 +48,7 @@
 
         const urlParams = new URLSearchParams(window.location.search);
 
-        // const profiles = document.querySelectorAll('.profile_btn');
-        // profiles.forEach((el) => {
-        //   el.addEventListener('click', (e) => {
-        //     e.preventDefault();
-        //     urlParams.set('profile', el.innerHTML);
-        //     window.location.search = urlParams.toString();
-        //   });
-        // });
-
-        if (data.role === 'admin') {
+        if (data.roleId === 1) {
           const links = document.querySelector('#root');
           const player = document.createElement('a');
           const manager = document.createElement('a');
@@ -84,7 +73,7 @@
           links.appendChild(manager)
         }
 
-        if (data.role === 'manager') {
+        if (data.roleId === 2) {
           const links = document.querySelector('#root');
           const player = document.createElement('a');
           player.innerText = 'player';
@@ -92,7 +81,7 @@
 
           player.addEventListener('click', (e) => {
             e.preventDefault();
-            urlParams.set('profile', 'manager');
+            urlParams.set('profile', 'player');
             window.location.search = urlParams.toString();
           });
           links.appendChild(player)
@@ -127,20 +116,20 @@
             const login = document.createElement('a');
             login.style = 'display: block;';
             login.appendChild(document.createTextNode(el.login));
-            login.href = `./profile.html?role=${el.role}&id=${el.id}`;
+            login.href = `./profile.html?role=${el.role.name}&id=${el.id}`;
 
             const avatar = document.createElement('img');
             avatar.src = el.avatar;
             avatar.style = 'width:100px; display: block;';
 
             const role = document.createElement('div');
-            role.appendChild(document.createTextNode(el.role));
+            role.appendChild(document.createTextNode(el.role.name));
 
             profile.appendChild(login);
             profile.appendChild(avatar);
             profile.appendChild(role);
 
-            if (el.role === 'player') {
+            if (el.role === 3) {
               const team = document.createElement('div');
               team.appendChild(document.createTextNode(el.team));
               profile.appendChild(team);

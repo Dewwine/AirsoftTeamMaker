@@ -11,7 +11,7 @@ describe('Players', () => {
     email: 'testPlayer@gmail.com',
     login: 'testPlayer',
     password: 'testPlayer',
-    role: 'player',
+    role: 3,
   };
 
   let token: string;

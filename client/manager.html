@@ -33,7 +33,7 @@
 
         const data = await response.json();
 
-        if (data.role === 'admin' || data.role === 'manager') {
+        if (data.role === 1 || data.role === 2) {
           const links = document.querySelector('#links');
           const profiles = document.createElement('a');
           profiles.innerText = 'profiles';
@@ -44,7 +44,7 @@
 
         const socket = io('http://localhost:3000');
         socket.on('subscribe', () => {
-          socket.emit('join-room', { channel: `${data.role}` });
+          socket.emit('join-room', { channel: `${data.role.name}` });
         });
 
         socket.on('new-notification', (res) => {

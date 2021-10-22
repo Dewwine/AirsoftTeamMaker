@@ -59,7 +59,7 @@
         });
         const data = await response.json();
 
-        if (data.role === 'admin' || data.role === 'manager') {
+        if (data.roleId === 1 || data.roleId === 2) {
           const links = document.querySelector('#links');
           const profiles = document.createElement('a');
           profiles.innerText = 'profiles';
@@ -68,7 +68,7 @@
           links.appendChild(profiles);
         }
 
-        if (data.role === 'admin') {
+        if (data.roleId === 1) {
           const links = document.querySelector('#links');
           const linkWrapper = document.createElement('div');
           const adminPage = document.createElement('a');
@@ -79,7 +79,7 @@
           linkWrapper.appendChild(adminPage);
         }
 
-        if (data.role === 'manager') {
+        if (data.roleId === 2) {
           const links = document.querySelector('#links');
           const linkWrapper = document.createElement('div');
           const managerPage = document.createElement('a');
@@ -92,7 +92,7 @@
 
         const socket = io('http://localhost:3000');
         await socket.on('subscribe', () => {
-          socket.emit('join-room', { channel: `${data.role}`, userId: `${data.id}` });
+          socket.emit('join-room', { channel: `${data.role.name}`, userId: `${data.id}` });
         });
 
         socket.on('new-notification', (res) => {
@@ -117,8 +117,8 @@
 
           login.innerHTML = `login: ${data.login}`;
           avatar.src = data.avatar;
-          role.innerHTML = `role: ${data.role}`;
-          if (data.role === 'player') {
+          role.innerHTML = `role: ${data.role.name}`;
+          if (data.role.name === 3) {
             team.innerHTML = `team: ${data.team}`;
           }
         }

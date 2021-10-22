@@ -77,7 +77,7 @@ const banProfile = async (req: Request, res: Response) => {
     return;
   }
 
-  if (profile.role === 'admin') {
+  if (profile.roleId === 1) {
     res.status(403).json({ message: 'Profile is admin' });
     return;
   }
@@ -105,7 +105,7 @@ const unbanProfile = async (req: Request, res: Response) => {
     return;
   }
 
-  if (profile.role === 'admin') {
+  if (profile.roleId === 1) {
     res.status(403).json({ message: 'Profile is admin' });
     return;
   }

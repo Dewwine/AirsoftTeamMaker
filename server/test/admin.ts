@@ -9,7 +9,7 @@ chai.use(chaiHttp);
 describe('Admins', () => {
   const testUser = {
     login: 'admin',
-    password: '1'
+    password: 1
   };
 
   let token: string;

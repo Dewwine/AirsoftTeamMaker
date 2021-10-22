@@ -2,7 +2,7 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../db/postgresdb';
 
 interface ISuspend extends Model {
-  profileId: string;
+  profileId: number;
   isActive: string;
   suspendReason: string;
   createdAt: Date;
@@ -10,7 +10,7 @@ interface ISuspend extends Model {
 }
 
 class suspendModel extends Model implements ISuspend {
-  public profileId!: string;
+  public profileId!: number;
 
   public isActive!: string;
   public suspendReason!: string;
@@ -21,10 +21,6 @@ class suspendModel extends Model implements ISuspend {
 
 suspendModel.init(
   {
-    profileId: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-    },
     isActive: {
       type: DataTypes.STRING,
     },
@@ -37,8 +33,6 @@ suspendModel.init(
     modelName: 'suspendTable',
   },
 );
-
-suspendModel.sync();
 
 export default suspendModel;
 export { ISuspend };

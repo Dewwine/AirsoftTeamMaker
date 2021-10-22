@@ -31,7 +31,7 @@ const register = async (req: Request, res: Response) => {
   
   await createSuspendTable(profile);
 
-  if (profile.role === 'manager') {
+  if (profile.roleId === 2) {
     await requestRegisterById(profile.id);
     res.status(202).json({ message: 'Your application was sent' });
     return;
@@ -61,7 +61,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
   }
 
   const managerRequest: IManagerRequest | null = await getManagerRequestByProfileId(profile.id);
-  if (profile.role === 'manager' && managerRequest) {
+  if (profile.roleId === 2 && managerRequest) {
     res.status(400).json({ message: 'Your application on review' });
     return;
   }
@@ -72,7 +72,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  if (profile.role === 'manager' && !activeProfile.isActive) {
+  if (profile.roleId === 2 && !activeProfile.isActive) {
     res.status(400).json({ message: 'Your application was declined' });
     return;
   }

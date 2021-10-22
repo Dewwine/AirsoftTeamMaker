@@ -12,15 +12,15 @@ import { protect, authorize } from '../middlewares/auth';
 
 const router: Router = Router();
 
-router.route('/teams/:team').get(protect, authorize('player', 'manager', 'admin'), getTeam);
+router.route('/teams/:team').get(protect, authorize(3, 2, 1), getTeam);
 
-router.route('/player').get(protect, authorize('player', 'manager', 'admin'), getProfiles);
-router.route('/player/:id').get(protect, authorize('player', 'manager', 'admin'), getProfile);
-router.route('/player/:id/kick').put(protect, authorize('manager', 'admin'), kickTeam);
+router.route('/player').get(protect, authorize(3, 2, 1), getProfiles);
+router.route('/player/:id').get(protect, authorize(3, 2, 1), getProfile);
+router.route('/player/:id/kick').put(protect, authorize(2, 1), kickTeam);
 
 router
   .route('/me')
-  .get(protect, authorize('player', 'manager', 'admin'), getMe)
-  .put(protect, authorize('player', 'manager', 'admin'), updateProfile);
+  .get(protect, authorize(3, 2, 1), getMe)
+  .put(protect, authorize(3, 2, 1), updateProfile);
 
 export default router;

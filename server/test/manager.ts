@@ -10,8 +10,8 @@ describe('Managers', () => {
   const testManager = {
     email: 'manager@gmail.com',
     login: 'manager',
-    password: '1',
-    role: 'manager',
+    password: 1,
+    role: 2,
   };
 
   const credentials = { login: testManager.login, password: testManager.password }

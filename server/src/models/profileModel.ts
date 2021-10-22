@@ -14,7 +14,7 @@ interface IProfileRequest {
 interface IProfileResponse {
   id: string;
   login: string;
-  role: string;
+  roleId: number;
   avatar: string;
   team: string;
 }
@@ -23,7 +23,7 @@ interface IProfile extends Model {
   id: string;
   email: string;
   login: string;
-  role: string;
+  roleId: number;
   password: string;
   resetPasswordToken: string;
   resetPasswordExpire: Date;
@@ -41,7 +41,7 @@ class ProfileModel extends Model implements IProfile {
   public id!: string;
   public email!: string;
   public login!: string;
-  public role!: string;
+  public roleId!: number;
   public password!: string;
   public resetPasswordToken!: string;
   public resetPasswordExpire!: Date;
@@ -70,8 +70,8 @@ class ProfileModel extends Model implements IProfile {
   }
 
   toResponse(): IProfileResponse {
-    const { id, login, role, avatar, team } = this;
-    return { id, login, role, avatar, team };
+    const { id, login, roleId, avatar, team } = this;
+    return { id, login, roleId, avatar, team };
   }
 }
 
@@ -91,10 +91,6 @@ ProfileModel.init(
       type: DataTypes.STRING,
       unique: true,
       allowNull: false,
-    },
-    role: {
-      type: DataTypes.STRING,
-      defaultValue: 'player',
     },
     password: {
       type: DataTypes.STRING,
@@ -125,7 +121,7 @@ ProfileModel.init(
   },
 );
 
-ProfileModel.sync();
+
 
 export default ProfileModel;
 export { IProfile, IProfileRequest, IProfileResponse };

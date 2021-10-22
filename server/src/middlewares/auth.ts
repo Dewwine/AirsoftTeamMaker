@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { Secret } from 'jsonwebtoken';
-import Profiles from '../models/profileModel';
+import { ProfileModel, RoleModel } from '../models/associate';
 
 const protect = async (req: Request, res: Response, next: NextFunction) => {
   let token: string | undefined;
@@ -27,7 +27,10 @@ const protect = async (req: Request, res: Response, next: NextFunction) => {
       return;
     }
 
-    res.locals.profile = await Profiles.findByPk(decoded.id);
+    res.locals.profile = await ProfileModel.findByPk(decoded.id, {
+      include: [{ model: RoleModel, as: 'role' }],
+    });
+    
 
     next();
   } catch (error) {
@@ -36,9 +39,9 @@ const protect = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const authorize =
-  (...roles: Array<string>) =>
+  (...roles: Array<number>) =>
   (_req: Request, res: Response, next: NextFunction) => {
-    if (!roles.includes(res.locals.profile.role)) {
+    if (!roles.includes(res.locals.profile.roleId)) {
       res.status(403).json({ message: 'Role forbidden' });
       return;
     }

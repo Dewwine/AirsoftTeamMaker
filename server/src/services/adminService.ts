@@ -1,4 +1,4 @@
-import SuspendTable from '../models/suspendModel';
+import { SuspendModel } from '../models/associate';
 import ManagerRequests from '../models/managerRequestsModel';
 import { IManagerRequest } from '../models/managerRequestsModel';
 
@@ -10,7 +10,7 @@ const getManagerRequestByProfileId = async (id: string): Promise<IManagerRequest
 
 // Admin
 const approveManagerById = async (id: string): Promise<void> => {
-  await SuspendTable.update(
+  await SuspendModel.update(
     {
       isActive: true,
     },
@@ -49,7 +49,7 @@ const declineManagerById = async (id: string): Promise<void> => {
 };
 
 const BanProfileById = async (id: string, reason: string): Promise<void> => {
-  await SuspendTable.update(
+  await SuspendModel.update(
     {
       isActive: 'false',
       suspendReason: reason,
@@ -63,7 +63,7 @@ const BanProfileById = async (id: string, reason: string): Promise<void> => {
 };
 
 const UnbanProfileById = async (id: string, reason: string): Promise<void> => {
-  await SuspendTable.update(
+  await SuspendModel.update(
     {
       isActive: 'true',
       suspendReason: reason,

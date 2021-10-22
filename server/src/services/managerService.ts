@@ -1,14 +1,13 @@
-import Profiles from '../models/profileModel';
+import { ProfileModel } from '../models/associate';
 import TeamRequests from '../models/teamRequestsModel';
 import { ITeamRequest } from '../models/teamRequestsModel';
 
 const getAllTeamRequests = async (): Promise<Array<ITeamRequest> | null> =>
   await TeamRequests.findAll({ where: { status: 'waiting' } });
 
-
 // Manager
 const approveTeamById = async (team: string, id: string): Promise<void> => {
-  await Profiles.update(
+  await ProfileModel.update(
     {
       team: team,
     },
