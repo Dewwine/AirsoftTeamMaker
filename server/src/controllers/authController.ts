@@ -4,7 +4,7 @@ import {
   getProfileByLogin,
   getProfileByEmail,
   getProfileByResetToken,
-  checkActiveProfile
+  checkActiveProfile,
 } from '../services/profileService';
 import {
   createNewPassword,
@@ -27,8 +27,31 @@ import { ISuspend } from '../models/suspendModel';
 const register = async (req: Request, res: Response) => {
   const { body } = req;
 
+  if (!body.email) {
+    res.status(400).json({ message: 'No email' });
+    return;
+  }
+  if (!body.login) {
+    res.status(400).json({ message: 'No login' });
+    return;
+  }
+  if (!body.password) {
+    res.status(400).json({ message: 'No password' });
+    return;
+  }
+  if (!body.role) {
+    res.status(400).json({ message: 'No role' });
+    return;
+  }
+
+  const checkProfile: IProfile | null = await getProfileByLogin(body.login);
+  if (checkProfile) {
+    res.status(400).json({ message: 'Profile already exists' });
+    return;
+  }
+
   const profile: IProfile = await createNewProfile(body);
-  
+
   await createSuspendTable(profile);
 
   if (profile.roleId === 2) {
@@ -43,8 +66,12 @@ const register = async (req: Request, res: Response) => {
 const login = async (req: Request, res: Response): Promise<void> => {
   const { login: profileLogin, password } = req.body;
 
-  if (!profileLogin || !password) {
-    res.status(400).json({ message: 'No login or password' });
+  if (!profileLogin) {
+    res.status(400).json({ message: 'No login' });
+    return;
+  }
+  if (!password) {
+    res.status(400).json({ message: 'No password' });
     return;
   }
 

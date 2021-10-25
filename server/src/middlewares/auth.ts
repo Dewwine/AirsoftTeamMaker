@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { Secret } from 'jsonwebtoken';
-import { ProfileModel, RoleModel } from '../models/associate';
+import { ProfileModel, RoleModel, TeamModel } from '../models/associate';
 
 const protect = async (req: Request, res: Response, next: NextFunction) => {
   let token: string | undefined;
@@ -28,9 +28,16 @@ const protect = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     res.locals.profile = await ProfileModel.findByPk(decoded.id, {
-      include: [{ model: RoleModel, as: 'role' }],
+      include: [
+        { model: RoleModel, as: 'role' },
+        { model: TeamModel, as: 'team' },
+      ],
     });
-    
+
+    if (!res.locals.profile) {
+      res.status(401).json({ message: 'Not authorized' });
+      return;
+    }
 
     next();
   } catch (error) {

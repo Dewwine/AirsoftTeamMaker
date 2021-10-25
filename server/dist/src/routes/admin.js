@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const adminController_1 = require("../controllers/adminController");
+const profilesController_1 = require("../controllers/profilesController");
+const auth_1 = require("../middlewares/auth");
+const router = (0, express_1.Router)();
+router.route('/managerRequests').get(auth_1.protect, (0, auth_1.authorize)(1), adminController_1.getManagerRequests);
+router.route('/manager').get(auth_1.protect, (0, auth_1.authorize)(1), profilesController_1.getProfiles);
+router.route('/manager/:id').get(auth_1.protect, (0, auth_1.authorize)(1), profilesController_1.getProfile);
+router.route('/:role/:id/ban').put(auth_1.protect, (0, auth_1.authorize)(1), adminController_1.banProfile);
+router.route('/:role/:id/unban').put(auth_1.protect, (0, auth_1.authorize)(1), adminController_1.unbanProfile);
+router.route('/manager/:id/approve').put(auth_1.protect, (0, auth_1.authorize)(1), adminController_1.approveManager);
+router.route('/manager/:id/decline').put(auth_1.protect, (0, auth_1.authorize)(1), adminController_1.declineManager);
+exports.default = router;

@@ -1,6 +1,7 @@
-import { ProfileModel, SuspendModel, RoleModel } from '../models/associate';
+import { ProfileModel, SuspendModel, RoleModel, TeamModel } from '../models/associate';
 import { ISuspend } from '../models/suspendModel';
 import { IProfileRequest, IProfile } from '../models/profileModel';
+import KickModel from '../models/kickModel';
 import Sequelize from 'sequelize';
 import hashPassword from '../utils/hashPassword';
 
@@ -8,18 +9,27 @@ const Op = Sequelize.Op;
 
 const getAllProfilesByRole = async (role: string): Promise<Array<IProfile>> =>
   await ProfileModel.findAll({
-    include: [{ model: RoleModel, as: 'role', where: { name: role } }],
+    include: [
+      { model: RoleModel, as: 'role', where: { name: role } },
+      { model: TeamModel, as: 'team' },
+    ],
   });
 
-const getProfilesByTeam = async (team: string): Promise<Array<IProfile>> =>
+const getProfilesByTeam = async (teamId: number): Promise<Array<IProfile>> =>
   await ProfileModel.findAll({
-    where: { team: team },
-    include: [{ model: RoleModel, as: 'role' }],
+    where: { teamId: teamId },
+    include: [
+      { model: RoleModel, as: 'role' },
+      { model: TeamModel, as: 'team' },
+    ],
   });
 
 const getProfileById = async (id: string): Promise<IProfile | null> =>
   await ProfileModel.findByPk(id, {
-    include: [{ model: RoleModel, as: 'role' }],
+    include: [
+      { model: RoleModel, as: 'role' },
+      { model: TeamModel, as: 'team' },
+    ],
   });
 
 const checkActiveProfile = async (id: string): Promise<ISuspend | null> =>
@@ -36,6 +46,7 @@ const getProfileByIdAndRole = async (id: string, role: string): Promise<IProfile
     },
     include: [
       { model: RoleModel, as: 'role', where: { name: role } },
+      { model: TeamModel, as: 'team' },
       { model: SuspendModel, as: 'suspendTable' },
     ],
   });
@@ -63,8 +74,13 @@ const updateProfileById = async (profile: IProfile, body: IProfileRequest): Prom
   if (body.password) {
     profile.password = await hashPassword(body.password);
   }
-  if (body.avatar) {
-    profile.avatar = body.avatar;
+
+  await profile.save();
+};
+
+const updateProfileAvatar = async (profile: IProfile, filepath: string): Promise<void> => {
+  if (filepath) {
+    profile.avatar = filepath;
   }
 
   await profile.save();
@@ -73,13 +89,23 @@ const updateProfileById = async (profile: IProfile, body: IProfileRequest): Prom
 const kickTeamById = async (id: string, reason: string): Promise<void> => {
   await ProfileModel.update(
     {
-      team: null,
-      teamStatus: 'kicked',
-      kickReason: reason,
+      teamId: null,
     },
     {
       where: {
         id: id,
+      },
+    },
+  );
+
+  await KickModel.update(
+    {
+      isActive: false,
+      kickReason: reason,
+    },
+    {
+      where: {
+        profileId: id,
       },
     },
   );
@@ -91,6 +117,7 @@ export {
   checkActiveProfile,
   getProfileByIdAndRole,
   updateProfileById,
+  updateProfileAvatar,
   getProfileByLogin,
   getProfileByEmail,
   getProfileByResetToken,

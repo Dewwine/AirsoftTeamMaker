@@ -16,7 +16,7 @@ interface IProfileResponse {
   login: string;
   roleId: number;
   avatar: string;
-  team: string;
+  teamId: number;
 }
 
 interface IProfile extends Model {
@@ -28,8 +28,7 @@ interface IProfile extends Model {
   resetPasswordToken: string;
   resetPasswordExpire: Date;
   avatar: string;
-  team: string;
-  kickReason: string;
+  teamId: number;
   createdAt: Date;
 
   getSignedJwtToken(): string;
@@ -46,8 +45,7 @@ class ProfileModel extends Model implements IProfile {
   public resetPasswordToken!: string;
   public resetPasswordExpire!: Date;
   public avatar!: string;
-  public team!: string;
-  public kickReason!: string;
+  public teamId!: number;
 
   public readonly createdAt!: Date;
 
@@ -70,8 +68,8 @@ class ProfileModel extends Model implements IProfile {
   }
 
   toResponse(): IProfileResponse {
-    const { id, login, roleId, avatar, team } = this;
-    return { id, login, roleId, avatar, team };
+    const { id, login, roleId, avatar, teamId } = this;
+    return { id, login, roleId, avatar, teamId };
   }
 }
 
@@ -105,13 +103,7 @@ ProfileModel.init(
     avatar: {
       type: DataTypes.STRING,
       defaultValue:
-        'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png',
-    },
-    team: {
-      type: DataTypes.STRING,
-    },
-    kickReason: {
-      type: DataTypes.STRING,
+        'uploads/avatars/1635170908486--png-transparent-profile-logo-computer-icons-user-user-blue-heroes-logo-thumbnail.png',
     },
   },
   {

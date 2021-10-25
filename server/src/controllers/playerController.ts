@@ -6,29 +6,37 @@ import {
   requestTeamById,
   cancelTeamById,
   leaveTeamById,
+  getTeamByName
 } from '../services/playerService';
 import { ITeamRequest } from '../models/teamRequestsModel';
 import { IProfile } from '../models/profileModel';
 
 // Player
 const applyTeam = async (req: Request, res: Response): Promise<void> => {
-  const { id, team: playerTeam } = res.locals.profile;
+  const { id, teamId: playerTeam } = res.locals.profile;
 
-  const { team } = req.params;
+  const { team: teamName } = req.params;
+  if (!teamName) {
+    res.status(404).json({ message: 'Team not found' });
+    return;
+  }
+
+  const team = await getTeamByName(teamName);
   if (!team) {
     res.status(404).json({ message: 'Team not found' });
     return;
   }
-  if (!['teamA', 'teamB'].includes(team)) {
+
+  if (!['teamA', 'teamB'].includes(team.name)) {
     res.status(404).json({ message: 'Team not exists' });
     return;
   }
-  if (playerTeam === team) {
+  if (playerTeam === team.id) {
     res.status(404).json({ message: 'Already in team' });
     return;
   }
 
-  const playersInTeam: IProfile[] = await getProfilesByTeam(team);
+  const playersInTeam: IProfile[] = await getProfilesByTeam(team.id);
   if (playersInTeam.length === 10) {
     res.status(400).json({ message: 'Team is full' });
     return;
@@ -40,7 +48,7 @@ const applyTeam = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  await requestTeamById(team, id);
+  await requestTeamById(team.id, id);
 
   res.status(200).json({ message: 'Application sent' });
 };

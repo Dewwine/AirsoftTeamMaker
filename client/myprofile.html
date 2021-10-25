@@ -30,8 +30,8 @@
         <input type="password" name="password" id="password" placeholder="New password" />
         <input type="submit" value="Submit" />
       </form>
-      <form class="updateForm">
-        <input type="text" name="avatar" id="avatar" placeholder="New avatar" />
+      <form class="updateAvatar">
+        <input type="file" name="avatar" id="avatar" placeholder="New avatar" />
         <input type="submit" value="Submit" />
       </form>
     </div>
@@ -116,10 +116,10 @@
           const team = document.querySelector('#team');
 
           login.innerHTML = `login: ${data.login}`;
-          avatar.src = data.avatar;
+          avatar.src = `http://localhost:5500/AirsoftTeamMaker/server/${data.avatar}`;
           role.innerHTML = `role: ${data.role.name}`;
           if (data.role.name === 3) {
-            team.innerHTML = `team: ${data.team}`;
+            team.innerHTML = `team: ${data.team.name}`;
           }
         }
 
@@ -137,6 +137,34 @@
                 body: updateData,
                 headers: {
                   'Content-Type': 'application/json',
+                  Authorization: `Bearer ${document.cookie.split('=')[1]}`,
+                },
+              });
+
+              responseText = await response.text();
+
+              if (response.status === 200) {
+                window.location.href = './profile.html';
+              } else {
+                alert(JSON.parse(responseText).message);
+              }
+            }),
+          );
+        }
+
+        {
+          const updateAvatar = document.querySelectorAll('.updateAvatar');
+
+          updateAvatar.forEach((el) =>
+            el.addEventListener('submit', async function (e) {
+              e.preventDefault();
+
+              const updateData = new FormData(this);
+
+              const response = await fetch('http://localhost:3000/api/me', {
+                method: 'post',
+                body: updateData,
+                headers: {
                   Authorization: `Bearer ${document.cookie.split('=')[1]}`,
                 },
               });

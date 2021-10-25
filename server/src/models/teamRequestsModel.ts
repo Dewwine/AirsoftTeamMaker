@@ -4,7 +4,7 @@ import sequelize from '../db/postgresdb';
 interface ITeamRequest extends Model {
   id: string;
   profileId: string;
-  teamRequest: string;
+  teamRequest: number;
   status: string;
   createdAt: Date;
   updatedAt: Date;
@@ -14,7 +14,7 @@ class TeamRequestModel extends Model implements ITeamRequest {
   public id!: string;
 
   public profileId!: string;
-  public teamRequest!: string;
+  public teamRequest!: number;
   public status!: string;
 
   public readonly createdAt!: Date;
@@ -32,7 +32,7 @@ TeamRequestModel.init(
       type: DataTypes.INTEGER,
     },
     teamRequest: {
-      type: DataTypes.STRING,
+      type: DataTypes.INTEGER,
     },
     status: {
       type: DataTypes.STRING,

@@ -1,6 +1,12 @@
 import { Response, Request } from 'express';
 import { getProfileById } from '../services/profileService';
-import { approveTeamById, declineTeamById, getAllTeamRequests } from '../services/managerService';
+import {
+  approveTeamById,
+  declineTeamById,
+  getAllTeamRequests,
+  createKickTable,
+  getKickTable,
+} from '../services/managerService';
 import { getTeamRequestByProfileId } from '../services/playerService';
 
 import { IProfile } from '../models/profileModel';
@@ -28,7 +34,13 @@ const approveTeam = async (req: Request, res: Response) => {
 
   const { teamRequest } = teamApplication;
 
+  const kickTable = await getKickTable(id);
+  if (!kickTable) {
+    await createKickTable(profile);
+  }
+
   await approveTeamById(teamRequest, id);
+
   res.status(200).json({ message: 'Application approved' });
 };
 
@@ -63,6 +75,6 @@ const getTeamRequests = async (_req: Request, res: Response) => {
   }
 
   res.status(200).json(teamApplications);
-}
+};
 
 export { approveTeam, declineTeam, getTeamRequests };

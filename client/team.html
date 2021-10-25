@@ -133,7 +133,6 @@
           });
 
           data.forEach((el) => {
-            console.log(el);
             const profile = document.createElement('div');
             profile.style = 'margin-top: 30px';
 
@@ -143,14 +142,14 @@
             login.href = `./profile.html?role=player&id=${el.id}`;
 
             const avatar = document.createElement('img');
-            avatar.src = el.avatar;
+            avatar.src = `http://localhost:5500/AirsoftTeamMaker/server/${el.avatar}`;
             avatar.style = 'width:100px; display: block;';
 
             const role = document.createElement('div');
             role.appendChild(document.createTextNode(el.role.name));
 
             const team = document.createElement('div');
-            team.appendChild(document.createTextNode(el.team));
+            team.appendChild(document.createTextNode(el.team.name));
 
             profile.appendChild(login);
             profile.appendChild(avatar);

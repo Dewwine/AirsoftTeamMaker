@@ -121,10 +121,10 @@
             const team = document.querySelector('#team');
 
             login.innerHTML = `login: ${profile.login}`;
-            avatar.src = profile.avatar;
+            avatar.src = `http://localhost:5500/AirsoftTeamMaker/server/${profile.avatar}`;
             role.innerHTML = `role: ${profile.role.name}`;
             if (profile.roleId === 3) {
-              team.innerHTML = `team: ${profile.team}`;
+              team.innerHTML = `team: ${profile.team.name}`;
             }
           }
 

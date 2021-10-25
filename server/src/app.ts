@@ -40,9 +40,13 @@ app.use(express.json());
 
 app.use(cookieParser());
 
-app.use(cors({
-  origin: '*'
-}));
+app.use(
+  cors({
+    origin: '*',
+  }),
+);
+
+app.use(express.static('/uploads'));
 
 app.use('/api/', auth);
 
